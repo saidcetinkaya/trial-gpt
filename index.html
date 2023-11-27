@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-4 Web Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>GPT-4 Web Interface</h1>
+    
+    <label for="query">Enter your query:</label>
+    <input type="text" id="query" style="width: 300px;">
+    <button onclick="sendRequests()">Send Query</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function sendRequests() {
+            const query = document.getElementById('query').value;
+
+            // GPT-4 Completion API Request
+            fetch('https://api.openai.com/v1/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo-instruct',
+                    prompt: query,
+                    max_tokens: 100,
+                    temperature: 0.7
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML = `<p><strong>GPT-4 Response:</strong> ${data.choices[0].text}</p>`;
+            })
+            .catch(error => console.error('Error:', error));
+
+            // OpenAI Embedding API Request
+            fetch('https://api.openai.com/v1/embeddings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
+                },
+                body: JSON.stringify({
+                    input: query,
+                    model: 'text-embedding-ada-002',
+                    encoding_format: 'float'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML += `<p><strong>Embedding Response:</strong> ${JSON.stringify(data.embedding)}</p>`;
+            })
+            .catch(error => console.error('Error:', error));
+
+            // Pinecone Query API Request
+            fetch('https://index_name-project_id.svc.environment.pinecone.io/query', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    includeValues: 'false',
+                    includeMetadata: 'false'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML += `<p><strong>Pinecone Response:</strong> ${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
